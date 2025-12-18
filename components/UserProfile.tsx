@@ -9,7 +9,7 @@ import {
   LogOut, Bell, Search, ChevronRight, Zap, Target, History,
   CheckCircle2, PlayCircle, Clock, Calendar, Camera, MapPin, 
   Briefcase, Mail, Save, Loader2, ArrowLeft, User as UserIcon,
-  MessageSquare
+  MessageSquare, Lock
 } from 'lucide-react';
 
 interface UserProfileProps {
@@ -212,8 +212,11 @@ const BillingView = () => (
 
 const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User>) => Promise<void> }> = ({ userData, onUpdateProfile }) => {
   const [formData, setFormData] = useState({ ...userData });
+  const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
@@ -227,6 +230,17 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingPassword(true);
+    // In a real app, call your API here
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setPasswordSuccess(true);
+    setPasswordData({ current: '', new: '', confirm: '' });
+    setTimeout(() => setPasswordSuccess(false), 3000);
+    setIsUpdatingPassword(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -300,6 +314,15 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
                </div>
             </div>
           </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Account Security</h4>
+             <p className="text-xs text-slate-500 leading-relaxed mb-4">Ensure your account stays secure with a strong password and location verification.</p>
+             <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-xs font-semibold text-slate-600">Password Health</span>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">Strong</span>
+             </div>
+          </div>
         </div>
 
         {/* Right Column - Form */}
@@ -325,6 +348,61 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
               <p className="text-[10px] text-slate-400 text-right font-medium">Characters: {formData.bio.length} / 500</p>
             </div>
           </div>
+
+          {/* Password Section */}
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+               <h3 className="font-bold text-xl text-slate-900 tracking-tight flex items-center gap-2">
+                 <Lock size={20} className="text-indigo-600" /> Security & Password
+               </h3>
+               {passwordSuccess && (
+                 <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 animate-pulse">
+                   <CheckCircle2 size={14} /> Password Updated
+                 </span>
+               )}
+            </div>
+            <p className="text-slate-500 text-sm leading-relaxed">Change your password regularly to keep your account safe from unauthorized access.</p>
+            
+            <form onSubmit={handleUpdatePassword} className="space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Input 
+                    label="Current Password" 
+                    type="password"
+                    icon={<Lock size={16}/>} 
+                    value={passwordData.current} 
+                    onChange={v => setPasswordData({...passwordData, current: v})} 
+                    placeholder="••••••••" 
+                  />
+                  <div className="hidden md:block"></div> {/* Spacer */}
+                  <Input 
+                    label="New Password" 
+                    type="password"
+                    icon={<Lock size={16}/>} 
+                    value={passwordData.new} 
+                    onChange={v => setPasswordData({...passwordData, new: v})} 
+                    placeholder="••••••••" 
+                  />
+                  <Input 
+                    label="Confirm New Password" 
+                    type="password"
+                    icon={<Lock size={16}/>} 
+                    value={passwordData.confirm} 
+                    onChange={v => setPasswordData({...passwordData, confirm: v})} 
+                    placeholder="••••••••" 
+                  />
+               </div>
+               <div className="flex justify-end pt-2">
+                  <button 
+                    type="submit"
+                    disabled={isUpdatingPassword || !passwordData.new}
+                    className="bg-white border border-slate-200 text-indigo-600 px-6 py-3 rounded-2xl font-bold hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isUpdatingPassword ? <Loader2 size={18} className="animate-spin" /> : <Settings size={18} />}
+                    Update Password
+                  </button>
+               </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -332,10 +410,51 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
 };
 
 // --- Helper Components ---
-const Input = ({ label, value, onChange, disabled, icon, placeholder }: any) => (
+
+/**
+ * A very simple Markdown-to-JSX renderer to handle AI Tutor responses
+ */
+const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-4">
+      {lines.map((line, idx) => {
+        // Headers ###
+        if (line.startsWith('### ')) {
+          return <h3 key={idx} className="text-lg font-bold text-indigo-900 mt-6 mb-2">{line.replace('### ', '')}</h3>;
+        }
+        // Bold **text**
+        const parts = line.split(/(\*\*.*?\*\*)/);
+        const renderedLine = parts.map((part, i) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="text-indigo-700 font-bold">{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        // Lists * or -
+        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+          return (
+            <div key={idx} className="flex gap-3 pl-2">
+              <span className="text-indigo-500 font-bold">•</span>
+              <p className="flex-1">{renderedLine.join('').replace(/^[* -]\s/, '')}</p>
+            </div>
+          );
+        }
+
+        if (!line.trim()) return <div key={idx} className="h-1" />;
+
+        return <p key={idx}>{renderedLine}</p>;
+      })}
+    </div>
+  );
+};
+
+const Input = ({ label, value, onChange, disabled, icon, placeholder, type = "text" }: any) => (
   <div className="space-y-2">
     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">{icon} {label}</label>
     <input 
+      type={type}
       value={value} 
       onChange={e => onChange?.(e.target.value)}
       disabled={disabled}
@@ -478,7 +597,15 @@ const ChatView: React.FC<{ userData: User }> = ({ userData }) => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const chat = ai.chats.create({
         model: 'gemini-3-flash-preview',
-        config: { systemInstruction: `Expert mentor CloudApex AI. Helping ${userData.name}. Concisely discuss tech tracks.` },
+        config: { 
+          systemInstruction: `You are a world-class technical mentor at CloudApex AI. Your mission is to provide high-impact, structured advice to student ${userData.name}. 
+          IMPORTANT RULES:
+          1. Always use clear bullet points (pointers) for key takeaways.
+          2. Use bold text (**keyword**) for emphasis on important technical terms.
+          3. Use structured headings (### Section Title) to separate distinct parts of your advice.
+          4. Avoid long paragraphs. Aim for scannability and high information density.
+          5. Keep the tone encouraging but professional.`
+        },
         history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
       });
       const res = await chat.sendMessage({ message: userMsg });
@@ -498,7 +625,7 @@ const ChatView: React.FC<{ userData: User }> = ({ userData }) => {
              <Bot size={28} />
           </div>
           <div>
-             <h2 className="font-bold text-slate-900 leading-tight text-lg">AI Mentor</h2>
+             <h2 className="font-bold text-slate-900 leading-tight text-lg">AI Tutor</h2>
              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
                 <span className="size-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> AI Systems Online
              </p>
@@ -525,8 +652,8 @@ const ChatView: React.FC<{ userData: User }> = ({ userData }) => {
         )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2`}>
-            <div className={`max-w-[85%] p-5 rounded-[2rem] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-indigo-600 text-white shadow-indigo-100 rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'}`}>
-              {m.text}
+            <div className={`max-w-[85%] p-6 rounded-[2rem] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-indigo-600 text-white shadow-indigo-100 rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'}`}>
+              {m.role === 'model' ? <MarkdownText text={m.text} /> : m.text}
             </div>
           </div>
         ))}

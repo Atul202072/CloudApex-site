@@ -43,7 +43,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <h4 className="font-bold text-slate-900 mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm text-slate-600">
               <li><button onClick={() => onNavigate('home')} className="hover:text-indigo-600">About Us</button></li>
-              <li><button onClick={() => onNavigate('experience')} className="hover:text-indigo-600">Success Stories</button></li>
+              <li><button onClick={() => onNavigate('contact')} className="hover:text-indigo-600">Contact Us</button></li>
               <li><button onClick={() => onNavigate('path')} className="hover:text-indigo-600">Mentors</button></li>
               <li><button onClick={() => onNavigate('syllabus')} className="hover:text-indigo-600">Syllabus</button></li>
             </ul>

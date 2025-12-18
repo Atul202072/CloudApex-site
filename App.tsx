@@ -10,6 +10,7 @@ import { Footer } from './components/Footer';
 import { UserProfile } from './components/UserProfile';
 import { Login } from './components/Login';
 import { BlogsPage } from './components/BlogsPage';
+import { ContactPage } from './components/ContactPage';
 import { Course, TimelineStep } from './types';
 import { Cloud, Server, Database, BookOpen, UserCheck, Rocket, ChevronRight } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -71,7 +72,7 @@ const timelineSteps: TimelineStep[] = [
   }
 ];
 
-export type AppView = 'home' | 'courses' | 'path' | 'syllabus' | 'experience' | 'blogs' | 'login' | 'profile';
+export type AppView = 'home' | 'courses' | 'path' | 'syllabus' | 'experience' | 'blogs' | 'login' | 'profile' | 'contact';
 
 function AppContent() {
   const { user, isLoading } = useAuth();
@@ -151,6 +152,16 @@ function AppContent() {
               description="Stay updated with the latest trends in Cloud, DevOps, and Data Science." 
             />
             <BlogsPage />
+          </div>
+        );
+      case 'contact':
+        return (
+          <div className="animate-fade-in-down">
+            <PageHeader 
+              title="Get in Touch" 
+              description="Have questions about our programs or career assistance? Our team is here to support you." 
+            />
+            <ContactPage />
           </div>
         );
       case 'path':
