@@ -1,5 +1,5 @@
 
-import { User } from '../types';
+import { User, BlogPost } from '../types';
 
 const API_BASE = '/api';
 
@@ -16,7 +16,7 @@ export const api = {
     const response = await fetch(`${API_BASE}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, password: 'password123' }) // In real prod, take password from UI
+      body: JSON.stringify({ email, name, password: 'password123' })
     });
     const data = await response.json();
     if (data.token) localStorage.setItem('cloudapex_token', data.token);
@@ -37,7 +37,6 @@ export const api = {
   async getSession(): Promise<User | null> {
     const token = localStorage.getItem('cloudapex_token');
     if (!token) return null;
-    
     try {
       const response = await fetch(`${API_BASE}/auth/me`, { headers: getHeaders() });
       if (!response.ok) throw new Error();
@@ -59,5 +58,29 @@ export const api = {
       body: JSON.stringify(updatedData)
     });
     return await response.json();
+  },
+
+  // Blog API
+  async getBlogs(): Promise<BlogPost[]> {
+    const response = await fetch(`${API_BASE}/blogs`);
+    return await response.json();
+  },
+
+  async createBlog(blog: Partial<BlogPost>): Promise<BlogPost> {
+    const response = await fetch(`${API_BASE}/blogs`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(blog)
+    });
+    if (!response.ok) throw new Error('Unauthorized or failed to create');
+    return await response.json();
+  },
+
+  async deleteBlog(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/blogs/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete');
   }
 };

@@ -30,6 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick, on
     { name: 'Path', id: 'path' },
     { name: 'Syllabus', id: 'syllabus' },
     { name: 'Experience', id: 'experience' },
+    { name: 'Blogs', id: 'blogs' },
   ];
 
   const handleNav = (view: string) => {

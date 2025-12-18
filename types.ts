@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export interface Course {
@@ -22,12 +23,6 @@ export interface TimelineStep {
   icon: React.ReactNode;
 }
 
-export interface Feature {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
 export interface User {
   id: string;
   name: string;
@@ -39,4 +34,14 @@ export interface User {
   xp: number;
   totalXp: number;
   bio: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  date: string;
+  category: string;
+  image: string;
 }
