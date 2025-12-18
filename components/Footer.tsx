@@ -1,14 +1,19 @@
+
 import React from 'react';
 import { CloudLightning, Github, Twitter, Linkedin, Mail } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate: (view: any) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="bg-slate-50 border-t border-slate-200 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           
           <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4 cursor-pointer" onClick={() => onNavigate('home')}>
               <div className="bg-indigo-600 p-1.5 rounded-lg">
                 <CloudLightning className="w-5 h-5 text-white" />
               </div>
@@ -27,20 +32,20 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="font-bold text-slate-900 mb-4">Programs</h4>
             <ul className="space-y-2 text-sm text-slate-600">
-              <li><a href="#" className="hover:text-indigo-600">Cloud Computing</a></li>
-              <li><a href="#" className="hover:text-indigo-600">DevOps Engineering</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Data Analytics</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Full Stack Web</a></li>
+              <li><button onClick={() => onNavigate('courses')} className="hover:text-indigo-600">Cloud Computing</button></li>
+              <li><button onClick={() => onNavigate('courses')} className="hover:text-indigo-600">DevOps Engineering</button></li>
+              <li><button onClick={() => onNavigate('courses')} className="hover:text-indigo-600">Data Analytics</button></li>
+              <li><button onClick={() => onNavigate('courses')} className="hover:text-indigo-600">Full Stack Web</button></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-slate-900 mb-4">Company</h4>
+            <h4 className="font-bold text-slate-900 mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm text-slate-600">
-              <li><a href="#" className="hover:text-indigo-600">About Us</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Success Stories</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Mentors</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Careers</a></li>
+              <li><button onClick={() => onNavigate('home')} className="hover:text-indigo-600">About Us</button></li>
+              <li><button onClick={() => onNavigate('experience')} className="hover:text-indigo-600">Success Stories</button></li>
+              <li><button onClick={() => onNavigate('path')} className="hover:text-indigo-600">Mentors</button></li>
+              <li><button onClick={() => onNavigate('syllabus')} className="hover:text-indigo-600">Syllabus</button></li>
             </ul>
           </div>
 

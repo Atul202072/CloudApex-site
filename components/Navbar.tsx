@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Menu, X, CloudLightning, UserCircle, LogOut, Settings, LayoutDashboard } from 'lucide-react';
 import { Button } from './Button';
@@ -6,9 +7,11 @@ import { useAuth } from '../context/AuthContext';
 interface NavbarProps {
   onLoginClick: () => void;
   onProfileClick: () => void;
+  onNavigate: (view: any) => void;
+  activeView: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick, onNavigate, activeView }) => {
   const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,17 +26,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick }) 
   }, []);
 
   const navLinks = [
-    { name: 'Courses', href: '#courses' },
-    { name: 'Path', href: '#timeline' },
-    { name: 'Syllabus', href: '#syllabus' },
-    { name: 'Experience', href: '#experience' },
+    { name: 'Courses', id: 'courses' },
+    { name: 'Path', id: 'path' },
+    { name: 'Syllabus', id: 'syllabus' },
+    { name: 'Experience', id: 'experience' },
   ];
 
+  const handleNav = (view: string) => {
+    onNavigate(view);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md border-b border-slate-100 py-3' : 'bg-transparent py-5'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || activeView !== 'home' ? 'bg-white/80 backdrop-blur-md border-b border-slate-100 py-3' : 'bg-transparent py-5'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNav('home')}>
             <div className="bg-indigo-600 p-2 rounded-lg">
               <CloudLightning className="w-6 h-6 text-white" />
             </div>
@@ -42,13 +50,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick }) 
 
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a 
+              <button 
                 key={link.name} 
-                href={link.href}
-                className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+                onClick={() => handleNav(link.id)}
+                className={`text-sm font-medium transition-colors ${activeView === link.id ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}
               >
                 {link.name}
-              </a>
+              </button>
             ))}
             
             {user ? (
@@ -119,14 +127,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick }) 
         <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-100 p-4 shadow-lg animate-fade-in-down">
           <div className="flex flex-col gap-4">
             {navLinks.map((link) => (
-              <a 
+              <button 
                 key={link.name}
-                href={link.href}
-                className="text-base font-medium text-slate-600 hover:text-indigo-600"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => handleNav(link.id)}
+                className={`text-left text-base font-medium transition-colors ${activeView === link.id ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}
               >
                 {link.name}
-              </a>
+              </button>
             ))}
             <div className="border-t border-slate-100 pt-4 mt-2">
               {user ? (

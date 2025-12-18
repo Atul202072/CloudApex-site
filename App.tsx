@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -9,10 +10,9 @@ import { Footer } from './components/Footer';
 import { UserProfile } from './components/UserProfile';
 import { Login } from './components/Login';
 import { Course, TimelineStep } from './types';
-import { Cloud, Server, Database, BookOpen, UserCheck, Rocket } from 'lucide-react';
+import { Cloud, Server, Database, BookOpen, UserCheck, Rocket, ChevronRight } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Data can be moved to a separate file, but kept here for simplicity as per instructions
 const courses: Course[] = [
   {
     id: '1',
@@ -70,16 +70,21 @@ const timelineSteps: TimelineStep[] = [
   }
 ];
 
+type AppView = 'home' | 'courses' | 'path' | 'syllabus' | 'experience' | 'login' | 'profile';
+
 function AppContent() {
   const { user, isLoading } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'profile'>('landing');
+  const [currentView, setCurrentView] = useState<AppView>('home');
 
-  // If user logs in externally (persistence), redirect or handle view
   useEffect(() => {
     if (user && currentView === 'login') {
-        setCurrentView('profile');
+      setCurrentView('profile');
     }
   }, [user, currentView]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentView]);
 
   if (isLoading) {
     return (
@@ -90,68 +95,154 @@ function AppContent() {
   }
 
   if (currentView === 'profile' && user) {
-    return <UserProfile onLogout={() => setCurrentView('landing')} />;
+    return <UserProfile onLogout={() => setCurrentView('home')} />;
   }
 
   if (currentView === 'login') {
     return (
       <Login 
         onLoginSuccess={() => setCurrentView('profile')} 
-        onBack={() => setCurrentView('landing')} 
+        onBack={() => setCurrentView('home')} 
       />
     );
   }
 
+  const PageHeader = ({ title, description }: { title: string; description: string }) => (
+    <div className="bg-slate-900 pt-32 pb-16 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-600 opacity-10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <nav className="flex items-center gap-2 text-indigo-300 text-sm mb-4">
+          <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">Home</button>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-white font-medium">{title}</span>
+        </nav>
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{title}</h1>
+        <p className="text-slate-400 text-lg max-w-2xl">{description}</p>
+      </div>
+    </div>
+  );
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'courses':
+        return (
+          <div className="animate-fade-in-down">
+            <PageHeader 
+              title="Career Tracks" 
+              description="Choose a specialized path designed to transform you into a world-class engineer." 
+            />
+            <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {courses.map(course => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            </section>
+          </div>
+        );
+      case 'path':
+        return (
+          <div className="animate-fade-in-down">
+            <PageHeader 
+              title="Learning Path" 
+              description="Our 6-month curriculum is structured to build your confidence from the ground up." 
+            />
+            <Timeline steps={timelineSteps} />
+          </div>
+        );
+      case 'syllabus':
+        return (
+          <div className="animate-fade-in-down">
+            <PageHeader 
+              title="Detailed Syllabus" 
+              description="Explore the exact modules and topics you will master during the program." 
+            />
+            <div className="py-12">
+              <Syllabus />
+            </div>
+          </div>
+        );
+      case 'experience':
+        return (
+          <div className="animate-fade-in-down">
+            <PageHeader 
+              title="Hands-on Experience" 
+              description="Apply your knowledge to real corporate scenarios and build a portfolio that stands out." 
+            />
+            <ExperienceSection />
+          </div>
+        );
+      default:
+        return (
+          <div className="animate-fade-in-down">
+            <Hero onExploreCourses={() => setCurrentView('courses')} />
+            
+            <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Explore Our Premium Tracks</h2>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                  Curriculum designed by top engineers to ensure you learn exactly what the industry needs today.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {courses.map(course => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+              <div className="text-center mt-12">
+                <button 
+                  onClick={() => setCurrentView('courses')}
+                  className="text-indigo-600 font-bold hover:underline inline-flex items-center gap-2"
+                >
+                  View all courses <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </section>
+
+            <div className="bg-slate-50 border-y border-slate-100">
+              <Timeline steps={timelineSteps} />
+            </div>
+            
+            <Syllabus />
+            
+            <ExperienceSection />
+            
+            <section className="py-24 bg-indigo-600 relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
+               <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white opacity-5 rounded-full -ml-20 -mb-20"></div>
+               
+               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Ready to start your career?</h2>
+                 <p className="text-indigo-100 text-lg mb-10 max-w-2xl mx-auto">
+                   Join 5,000+ students who have successfully transitioned into high-paying tech careers. Applications are closing soon for the next cohort.
+                 </p>
+                 <button 
+                  onClick={() => setCurrentView('login')}
+                  className="bg-white text-indigo-600 font-bold py-4 px-10 rounded-xl shadow-xl hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+                >
+                   Apply Now for Free
+                 </button>
+               </div>
+            </section>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar 
+        onNavigate={setCurrentView}
+        activeView={currentView}
         onLoginClick={() => setCurrentView('login')} 
         onProfileClick={() => setCurrentView('profile')}
       />
       
       <main>
-        <Hero />
-        
-        {/* Courses Section */}
-        <section id="courses" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Explore Our Premium Tracks</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Curriculum designed by top engineers to ensure you learn exactly what the industry needs today.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map(course => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </section>
-
-        <Timeline steps={timelineSteps} />
-        
-        <Syllabus />
-        
-        <ExperienceSection />
-        
-        {/* CTA Section */}
-        <section className="py-24 bg-indigo-600 relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
-           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white opacity-5 rounded-full -ml-20 -mb-20"></div>
-           
-           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Ready to start your career?</h2>
-             <p className="text-indigo-100 text-lg mb-10 max-w-2xl mx-auto">
-               Join 5,000+ students who have successfully transitioned into high-paying tech careers. Applications are closing soon for the next cohort.
-             </p>
-             <button className="bg-white text-indigo-600 font-bold py-4 px-10 rounded-xl shadow-xl hover:bg-indigo-50 hover:scale-105 transition-all duration-300">
-               Apply Now for Free
-             </button>
-           </div>
-        </section>
-
+        {renderView()}
       </main>
 
-      <Footer />
+      <Footer onNavigate={setCurrentView} />
     </div>
   );
 }

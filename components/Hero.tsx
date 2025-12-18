@@ -1,8 +1,13 @@
+
 import React from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from './Button';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  onExploreCourses: () => void;
+}
+
+export const Hero: React.FC<HeroProps> = ({ onExploreCourses }) => {
   return (
     <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
       {/* Abstract Background Shapes */}
@@ -30,7 +35,7 @@ export const Hero: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto group">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto group" onClick={onExploreCourses}>
               Explore Courses 
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
