@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { User } from '../types';
 import { AdminBlogs } from './AdminBlogs';
 import { GoogleGenAI } from "@google/genai";
+import { api } from '../services/api';
 import { 
   Send, Bot, LayoutDashboard, Settings, BookOpen, Award, CreditCard, 
   LogOut, Bell, Search, ChevronRight, Zap, Target, History,
@@ -217,6 +218,7 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
@@ -234,13 +236,23 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError('');
+    if (passwordData.new !== passwordData.confirm) {
+      setPasswordError("Passwords don't match");
+      return;
+    }
+    
     setIsUpdatingPassword(true);
-    // In a real app, call your API here
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setPasswordSuccess(true);
-    setPasswordData({ current: '', new: '', confirm: '' });
-    setTimeout(() => setPasswordSuccess(false), 3000);
-    setIsUpdatingPassword(false);
+    try {
+      await api.changePassword(passwordData.current, passwordData.new);
+      setPasswordSuccess(true);
+      setPasswordData({ current: '', new: '', confirm: '' });
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Failed to update password');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -361,6 +373,9 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
                  </span>
                )}
             </div>
+            {passwordError && (
+              <p className="text-red-500 text-xs font-bold bg-red-50 p-3 rounded-xl border border-red-100">{passwordError}</p>
+            )}
             <p className="text-slate-500 text-sm leading-relaxed">Change your password regularly to keep your account safe from unauthorized access.</p>
             
             <form onSubmit={handleUpdatePassword} className="space-y-6">
@@ -412,39 +427,42 @@ const SettingsView: React.FC<{ userData: User; onUpdateProfile: (d: Partial<User
 // --- Helper Components ---
 
 /**
- * A very simple Markdown-to-JSX renderer to handle AI Tutor responses
+ * Enhanced Markdown-to-JSX renderer with professional styling for AI Tutor responses
  */
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   const lines = text.split('\n');
   return (
     <div className="space-y-4">
       {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        
         // Headers ###
-        if (line.startsWith('### ')) {
-          return <h3 key={idx} className="text-lg font-bold text-indigo-900 mt-6 mb-2">{line.replace('### ', '')}</h3>;
+        if (trimmed.startsWith('### ')) {
+          return <h3 key={idx} className="text-lg font-bold text-slate-900 mt-8 mb-4 border-l-4 border-indigo-600 pl-4">{trimmed.replace('### ', '')}</h3>;
         }
-        // Bold **text**
+
+        // Processing bolding within a line
         const parts = line.split(/(\*\*.*?\*\*)/);
         const renderedLine = parts.map((part, i) => {
           if (part.startsWith('**') && part.endsWith('**')) {
-            return <strong key={i} className="text-indigo-700 font-bold">{part.slice(2, -2)}</strong>;
+            return <strong key={i} className="text-indigo-600 font-bold bg-indigo-50/50 px-1.5 py-0.5 rounded mx-0.5">{part.slice(2, -2)}</strong>;
           }
           return part;
         });
 
         // Lists * or -
-        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
           return (
-            <div key={idx} className="flex gap-3 pl-2">
-              <span className="text-indigo-500 font-bold">•</span>
-              <p className="flex-1">{renderedLine.join('').replace(/^[* -]\s/, '')}</p>
+            <div key={idx} className="flex gap-4 pl-2 py-1 group">
+              <div className="mt-1.5 size-2 rounded-full bg-indigo-500 group-hover:scale-125 transition-transform" />
+              <div className="flex-1 text-slate-700 leading-relaxed">{renderedLine}</div>
             </div>
           );
         }
 
-        if (!line.trim()) return <div key={idx} className="h-1" />;
+        if (!trimmed) return <div key={idx} className="h-2" />;
 
-        return <p key={idx}>{renderedLine}</p>;
+        return <p key={idx} className="text-slate-700 leading-relaxed">{renderedLine}</p>;
       })}
     </div>
   );
@@ -593,25 +611,24 @@ const ChatView: React.FC<{ userData: User }> = ({ userData }) => {
     setMessages(p => [...p, { role: 'user', text: userMsg }]);
     setIsLoading(true);
     try {
-      /* Create a new GoogleGenAI instance right before making an API call */
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const chat = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: { 
-          systemInstruction: `You are a world-class technical mentor at CloudApex AI. Your mission is to provide high-impact, structured advice to student ${userData.name}. 
-          IMPORTANT RULES:
-          1. Always use clear bullet points (pointers) for key takeaways.
-          2. Use bold text (**keyword**) for emphasis on important technical terms.
-          3. Use structured headings (### Section Title) to separate distinct parts of your advice.
-          4. Avoid long paragraphs. Aim for scannability and high information density.
-          5. Keep the tone encouraging but professional.`
+          systemInstruction: `You are a world-class technical mentor at CloudApex AI. Provide high-impact advice to student ${userData.name}. 
+          RULES:
+          1. Use clear ### Section Headings.
+          2. Use scannable bullet points (pointers) for all lists.
+          3. Bold **key technical terms**.
+          4. Keep responses high-density but structured for quick reading.
+          5. No long paragraphs.`
         },
         history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
       });
       const res = await chat.sendMessage({ message: userMsg });
-      setMessages(p => [...p, { role: 'model', text: res.text || "Failed to respond." }]);
+      setMessages(p => [...p, { role: 'model', text: res.text || "I'm having trouble analyzing your request. Please try again." }]);
     } catch {
-      setMessages(p => [...p, { role: 'model', text: "Error connecting to AI." }]);
+      setMessages(p => [...p, { role: 'model', text: "Systems currently overloaded. Please refresh or try again later." }]);
     } finally {
       setIsLoading(false);
     }
@@ -627,11 +644,11 @@ const ChatView: React.FC<{ userData: User }> = ({ userData }) => {
           <div>
              <h2 className="font-bold text-slate-900 leading-tight text-lg">AI Tutor</h2>
              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
-                <span className="size-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> AI Systems Online
+                <span className="size-2 bg-emerald-500 rounded-full animate-pulse"></span> Production Core Online
              </p>
           </div>
         </div>
-        <button onClick={() => setMessages([])} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">Reset Session</button>
+        <button onClick={() => setMessages([])} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">Clear History</button>
       </header>
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth">
         {messages.length === 0 && (
@@ -640,31 +657,31 @@ const ChatView: React.FC<{ userData: User }> = ({ userData }) => {
                <Bot size={48} />
             </div>
             <div className="max-w-xs space-y-2">
-               <h3 className="font-bold text-xl text-slate-900">Hello, {userData.name}!</h3>
-               <p className="text-slate-500 text-sm leading-relaxed">I'm your dedicated tech mentor. Ask me anything about Cloud, DevOps, or Data Science!</p>
+               <h3 className="font-bold text-xl text-slate-900">Expert Guidance, Instantly.</h3>
+               <p className="text-slate-500 text-sm leading-relaxed">Choose a path below or type a query to start learning.</p>
             </div>
             <div className="flex flex-wrap justify-center gap-2">
-               {['Cloud vs DevOps?', 'AWS roadmap?', 'Career advice?'].map(q => (
-                 <button key={q} onClick={() => setInput(q)} className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:border-indigo-600 hover:text-indigo-600 transition-all shadow-sm">{q}</button>
+               {['Explain Docker vs VM', 'AWS career roadmap', 'Python for DevOps'].map(q => (
+                 <button key={q} onClick={() => { setInput(q); }} className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:border-indigo-600 hover:text-indigo-600 transition-all shadow-sm">{q}</button>
                ))}
             </div>
           </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2`}>
-            <div className={`max-w-[85%] p-6 rounded-[2rem] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-indigo-600 text-white shadow-indigo-100 rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'}`}>
+            <div className={`max-w-[90%] p-6 rounded-[2rem] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-indigo-600 text-white shadow-indigo-100 rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'}`}>
               {m.role === 'model' ? <MarkdownText text={m.text} /> : m.text}
             </div>
           </div>
         ))}
-        {isLoading && <div className="flex justify-start"><div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm animate-pulse text-xs font-bold text-slate-400 flex items-center gap-2"><Loader2 size={16} className="animate-spin text-indigo-600" /> Mentor is analyzing...</div></div>}
+        {isLoading && <div className="flex justify-start"><div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm animate-pulse text-xs font-bold text-slate-400 flex items-center gap-2"><Loader2 size={16} className="animate-spin text-indigo-600" /> Computing insights...</div></div>}
       </div>
       <div className="p-8 bg-white border-t border-slate-100">
         <form onSubmit={handleSend} className="flex gap-4 max-w-4xl mx-auto">
           <input 
             value={input} 
             onChange={e => setInput(e.target.value)} 
-            placeholder="Describe your technical query..." 
+            placeholder="What technical topic should we master today?" 
             className="flex-1 bg-slate-50 border-none rounded-2xl px-6 py-5 text-sm focus:ring-4 focus:ring-indigo-600/5 shadow-inner outline-none" 
           />
           <button type="submit" disabled={isLoading || !input.trim()} className="bg-indigo-600 text-white p-5 rounded-2xl shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 group">

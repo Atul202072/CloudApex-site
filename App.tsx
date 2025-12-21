@@ -10,14 +10,16 @@ import { Footer } from './components/Footer';
 import { UserProfile } from './components/UserProfile';
 import { Login } from './components/Login';
 import { BlogsPage } from './components/BlogsPage';
+import { BlogDetail } from './components/BlogDetail';
 import { ContactPage } from './components/ContactPage';
-import { Course, TimelineStep } from './types';
+import { CourseDetail } from './components/CourseDetail';
+import { Course, TimelineStep, BlogPost } from './types';
 import { Cloud, Server, Database, BookOpen, UserCheck, Rocket, ChevronRight } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-const courses: Course[] = [
+export const courses: Course[] = [
   {
-    id: '1',
+    id: 'cloud-arch',
     title: 'Cloud Computing Architect',
     description: 'Master AWS and Azure cloud platforms. Learn to design, deploy, and manage scalable and secure cloud infrastructure.',
     icon: <Cloud className="w-6 h-6" />,
@@ -26,7 +28,7 @@ const courses: Course[] = [
     tags: ['AWS', 'Azure', 'Security']
   },
   {
-    id: '2',
+    id: 'devops-eng',
     title: 'DevOps Engineering',
     description: 'Bridge the gap between development and operations. Master Docker, Kubernetes, Jenkins, and Terraform.',
     icon: <Server className="w-6 h-6" />,
@@ -35,7 +37,7 @@ const courses: Course[] = [
     tags: ['Docker', 'K8s', 'CI/CD']
   },
   {
-    id: '3',
+    id: 'data-analytics',
     title: 'Data Analytics Pro',
     description: 'Transform raw data into actionable insights. Learn Python, SQL, Tableau, and Machine Learning fundamentals.',
     icon: <Database className="w-6 h-6" />,
@@ -72,11 +74,13 @@ const timelineSteps: TimelineStep[] = [
   }
 ];
 
-export type AppView = 'home' | 'courses' | 'path' | 'syllabus' | 'experience' | 'blogs' | 'login' | 'profile' | 'contact';
+export type AppView = 'home' | 'courses' | 'course-detail' | 'path' | 'syllabus' | 'experience' | 'blogs' | 'blog-detail' | 'login' | 'profile' | 'contact';
 
 function AppContent() {
   const { user, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('home');
+  const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
+  const [activeBlogId, setActiveBlogId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && currentView === 'login') {
@@ -86,7 +90,7 @@ function AppContent() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentView]);
+  }, [currentView, activeCourseId, activeBlogId]);
 
   if (isLoading) {
     return (
@@ -95,6 +99,16 @@ function AppContent() {
       </div>
     );
   }
+
+  const navigateToCourse = (id: string) => {
+    setActiveCourseId(id);
+    setCurrentView('course-detail');
+  };
+
+  const navigateToBlog = (id: string) => {
+    setActiveBlogId(id);
+    setCurrentView('blog-detail');
+  };
 
   const PageHeader = ({ title, description }: { title: string; description: string }) => (
     <div className="bg-slate-900 pt-32 pb-16 relative overflow-hidden">
@@ -124,7 +138,7 @@ function AppContent() {
     switch (currentView) {
       case 'profile':
         return user ? (
-          <div className="pt-20"> {/* Offset for persistent navbar */}
+          <div className="pt-20">
             <UserProfile onLogout={() => setCurrentView('home')} />
           </div>
         ) : <Login onLoginSuccess={() => setCurrentView('profile')} onBack={() => setCurrentView('home')} />;
@@ -138,12 +152,15 @@ function AppContent() {
             <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {courses.map(course => (
-                  <CourseCard key={course.id} course={course} />
+                  <CourseCard key={course.id} course={course} onClick={() => navigateToCourse(course.id)} />
                 ))}
               </div>
             </section>
           </div>
         );
+      case 'course-detail':
+        const selectedCourse = courses.find(c => c.id === activeCourseId);
+        return selectedCourse ? <CourseDetail course={selectedCourse} onBack={() => setCurrentView('courses')} /> : <div className="pt-40 text-center">Course not found.</div>;
       case 'blogs':
         return (
           <div className="animate-fade-in-down">
@@ -151,9 +168,11 @@ function AppContent() {
               title="Latest Insights" 
               description="Stay updated with the latest trends in Cloud, DevOps, and Data Science." 
             />
-            <BlogsPage />
+            <BlogsPage onReadMore={navigateToBlog} />
           </div>
         );
+      case 'blog-detail':
+        return <BlogDetail blogId={activeBlogId!} onBack={() => setCurrentView('blogs')} />;
       case 'contact':
         return (
           <div className="animate-fade-in-down">
@@ -210,7 +229,7 @@ function AppContent() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {courses.map(course => (
-                  <CourseCard key={course.id} course={course} />
+                  <CourseCard key={course.id} course={course} onClick={() => navigateToCourse(course.id)} />
                 ))}
               </div>
             </section>

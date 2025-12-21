@@ -45,3 +45,17 @@ export interface BlogPost {
   category: string;
   image: string;
 }
+
+export interface ContactInquiry {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  date: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}

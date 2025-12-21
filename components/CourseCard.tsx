@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Clock, BarChart, Tag } from 'lucide-react';
 import { Course } from '../types';
@@ -5,16 +6,20 @@ import { Button } from './Button';
 
 interface CourseCardProps {
   course: Course;
+  onClick?: () => void;
 }
 
-export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+export const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
   return (
-    <div className="group bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 flex flex-col h-full hover:-translate-y-1">
+    <div 
+      onClick={onClick}
+      className="group bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 flex flex-col h-full hover:-translate-y-1 cursor-pointer"
+    >
       <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
         {course.icon}
       </div>
       
-      <h3 className="text-2xl font-bold text-slate-900 mb-3">{course.title}</h3>
+      <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">{course.title}</h3>
       <p className="text-slate-600 mb-6 flex-grow leading-relaxed">{course.description}</p>
       
       <div className="space-y-4 mb-8">
@@ -36,7 +41,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </div>
       </div>
 
-      <Button variant="outline" className="w-full">View Details</Button>
+      <Button variant="outline" className="w-full pointer-events-none group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+        View Details
+      </Button>
     </div>
   );
 };

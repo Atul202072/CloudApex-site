@@ -2,9 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { BlogPost } from '../types';
-import { Calendar, User, ArrowRight } from 'lucide-react';
+import { Calendar, User, ArrowRight, Loader2 } from 'lucide-react';
 
-export const BlogsPage: React.FC = () => {
+interface BlogsPageProps {
+  onReadMore?: (id: string) => void;
+}
+
+export const BlogsPage: React.FC<BlogsPageProps> = ({ onReadMore }) => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,7 +29,7 @@ export const BlogsPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="py-24 text-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-600 mx-auto"></div>
+        <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mx-auto" />
       </div>
     );
   }
@@ -39,23 +43,27 @@ export const BlogsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogs.map(blog => (
-            <article key={blog.id} className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col">
+            <article 
+              key={blog.id} 
+              onClick={() => onReadMore?.(blog.id)}
+              className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col cursor-pointer"
+            >
               <div className="h-52 w-full relative overflow-hidden">
                 <img 
-                  src={blog.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80'} 
+                  src={blog.image || `https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80&sig=${blog.id}`} 
                   alt={blog.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-4 left-4">
-                  <span className="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  <span className="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-indigo-500/20">
                     {blog.category}
                   </span>
                 </div>
               </div>
               <div className="p-6 flex flex-col flex-1">
-                <div className="flex items-center gap-4 text-xs text-slate-400 mb-4 font-medium">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {blog.date}</span>
-                  <span className="flex items-center gap-1"><User className="w-3 h-3" /> {blog.author}</span>
+                <div className="flex items-center gap-4 text-xs text-slate-400 mb-4 font-bold uppercase tracking-widest">
+                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(blog.date).toLocaleDateString()}</span>
+                  <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {blog.author}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors leading-tight">
                   {blog.title}
