@@ -1,15 +1,59 @@
 
-import React from 'react';
-import { ArrowLeft, CheckCircle2, Star, Clock, Globe, ShieldCheck, Users, PlayCircle, BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, CheckCircle2, Star, Clock, Globe, ShieldCheck, Users, PlayCircle, BookOpen, Download, Loader2 } from 'lucide-react';
 import { Course } from '../types';
 import { Button } from './Button';
 
 interface CourseDetailProps {
   course: Course;
   onBack: () => void;
+  onEnroll: (trackId: string) => void;
 }
 
-export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) => {
+export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack, onEnroll }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadBrochure = () => {
+    setIsDownloading(true);
+    
+    // Simulate generation of a brochure file
+    const brochureContent = `
+CLOUD APEX LEARNING - PROGRAM BROCHURE
+=======================================
+Course: ${course.title}
+Track ID: ${course.id}
+Duration: ${course.duration}
+Level: ${course.level}
+
+CURRICULUM HIGHLIGHTS:
+- Cloud Architecture Foundations
+- High Availability & Security
+- Scalable Systems Design
+- Enterprise Project Work
+
+PRICING: $499.00 Total
+Includes: Lifetime access, Certification, Job Support.
+
+Visit hello@cloudapex.com for support.
+    `;
+
+    // Trigger local download
+    const blob = new Blob([brochureContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CloudApex_Brochure_${course.id}.txt`;
+    
+    // Slight delay for UX
+    setTimeout(() => {
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setIsDownloading(false);
+    }, 1200);
+  };
+
   return (
     <div className="animate-fade-in-down pb-24">
       <div className="bg-slate-900 pt-32 pb-24 relative overflow-hidden">
@@ -41,8 +85,17 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) =>
               </div>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <Button size="lg" className="px-10">Enroll Now</Button>
-                <Button variant="secondary" size="lg">Download Brochure</Button>
+                <Button onClick={() => onEnroll(course.id)} size="lg" className="px-10 shadow-xl shadow-indigo-600/20">Enroll Now</Button>
+                <Button 
+                  onClick={handleDownloadBrochure} 
+                  variant="secondary" 
+                  size="lg"
+                  disabled={isDownloading}
+                  className="flex items-center gap-2"
+                >
+                  {isDownloading ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                  {isDownloading ? 'Generating...' : 'Download Brochure'}
+                </Button>
               </div>
             </div>
 

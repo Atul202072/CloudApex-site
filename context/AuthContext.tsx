@@ -1,14 +1,15 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { api } from '../services/mockBackend';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string) => Promise<void>;
+  login: (email: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  signup: (email: string, name: string) => Promise<void>;
+  signup: (email: string, name: string, password?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,9 +32,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession();
   }, []);
 
-  const login = async (email: string) => {
-    const user = await api.login(email);
-    setUser(user);
+  const login = async (email: string, password?: string) => {
+    const response = await api.login(email, password);
+    setUser(response.user);
   };
 
   const logout = async () => {
@@ -46,9 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(updatedUser);
   };
   
-  const signup = async (email: string, name: string) => {
-      const newUser = await api.signup(email, name);
-      setUser(newUser);
+  const signup = async (email: string, name: string, password?: string) => {
+      const response = await api.signup(email, name, password);
+      setUser(response.user);
   }
 
   return (

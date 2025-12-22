@@ -55,6 +55,18 @@ db.serialize(() => {
     message TEXT,
     date TEXT
   )`);
+
+  // Enrollments Table
+  db.run(`CREATE TABLE IF NOT EXISTS enrollments (
+    id TEXT PRIMARY KEY,
+    fullName TEXT,
+    email TEXT,
+    phone TEXT,
+    track TEXT,
+    experience TEXT,
+    motivation TEXT,
+    date TEXT
+  )`);
 });
 
 const authenticateToken = (req, res, next) => {
@@ -78,50 +90,59 @@ const isAdmin = (req, res, next) => {
 
 // --- AUTH ROUTES ---
 app.post('/api/auth/signup', async (req, res) => {
-  const { name, email, password } = req.body;
-  
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email and password are required' });
-  }
-
-  const id = Math.random().toString(36).substr(2, 9);
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-  const role = (email === 'admin@cloudapex.com') ? 'Admin' : 'Student';
-
-  const sql = `INSERT INTO users (id, name, email, password, avatar, role, level, xp, totalXp, bio, location) 
-               VALUES (?, ?, ?, ?, ?, ?, 1, 0, 1000, 'Welcome to CloudApex!', 'Remote')`;
-  
-  db.run(sql, [id, name, email, hashedPassword, avatar, role], function(err) {
-    if (err) {
-      console.error(err);
-      return res.status(400).json({ error: 'An account with this email already exists' });
+  try {
+    const { name, email, password } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email and password are required' });
     }
-    const token = jwt.sign({ id, email }, SECRET_KEY);
-    res.json({ 
-      token, 
-      user: { id, name, email, avatar, role, level: 1, xp: 0, totalXp: 1000, bio: 'Welcome to CloudApex!', location: 'Remote' } 
+
+    const id = Math.random().toString(36).substr(2, 9);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+    const role = (email === 'admin@cloudapex.com') ? 'Admin' : 'Student';
+
+    const sql = `INSERT INTO users (id, name, email, password, avatar, role, level, xp, totalXp, bio, location) 
+                 VALUES (?, ?, ?, ?, ?, ?, 1, 0, 1000, 'Welcome to CloudApex!', 'Remote')`;
+    
+    db.run(sql, [id, name, email, hashedPassword, avatar, role], function(err) {
+      if (err) {
+        return res.status(400).json({ error: 'An account with this email already exists' });
+      }
+      const token = jwt.sign({ id, email }, SECRET_KEY);
+      res.json({ 
+        token, 
+        user: { id, name, email, avatar, role, level: 1, xp: 0, totalXp: 1000, bio: 'Welcome to CloudApex!', location: 'Remote' } 
+      });
     });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error during signup' });
+  }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
-  db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
-    if (err || !user) return res.status(400).json({ error: 'Account not found. Please sign up first.' });
-    
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(400).json({ error: 'Invalid password. Please try again.' });
-    
-    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY);
-    delete user.password;
-    res.json({ token, user });
-  });
+    db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      if (!user) return res.status(400).json({ error: 'Account not found. Please sign up first.' });
+      
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) return res.status(400).json({ error: 'Invalid password. Please try again.' });
+      
+      const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY);
+      const userObj = { ...user };
+      delete userObj.password;
+      res.json({ token, user: userObj });
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error during login' });
+  }
 });
 
 app.get('/api/auth/me', authenticateToken, (req, res) => {
@@ -129,6 +150,29 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   });
+});
+
+// --- ENROLLMENT ROUTE ---
+app.post('/api/enrollment', (req, res) => {
+  try {
+    const { fullName, email, phone, track, experience, motivation } = req.body;
+    if (!fullName || !email || !track) {
+      return res.status(400).json({ error: 'Required fields missing' });
+    }
+    
+    const id = Math.random().toString(36).substr(2, 9);
+    const date = new Date().toISOString();
+    
+    db.run(`INSERT INTO enrollments (id, fullName, email, phone, track, experience, motivation, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, fullName, email, phone, track, experience, motivation, date],
+      (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to save enrollment' });
+        res.json({ message: 'Enrollment successful', id });
+      }
+    );
+  } catch (err) {
+    res.status(500).json({ error: 'Server error during enrollment' });
+  }
 });
 
 // --- USER PROFILE ROUTES ---
@@ -203,6 +247,12 @@ app.delete('/api/blogs/:id', authenticateToken, isAdmin, (req, res) => {
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Global error handler for uncaught async errors
+app.use((err, req, res, next) => {
+  console.error('Uncaught Exception:', err);
+  res.status(500).json({ error: 'An unexpected internal server error occurred.' });
 });
 
 app.listen(PORT, () => {

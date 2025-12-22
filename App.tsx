@@ -13,8 +13,9 @@ import { BlogsPage } from './components/BlogsPage';
 import { BlogDetail } from './components/BlogDetail';
 import { ContactPage } from './components/ContactPage';
 import { CourseDetail } from './components/CourseDetail';
+import { EnrollmentPage } from './components/EnrollmentPage';
 import { Course, TimelineStep, BlogPost } from './types';
-import { Cloud, Server, Database, BookOpen, UserCheck, Rocket, ChevronRight } from 'lucide-react';
+import { Cloud, Server, Database, BookOpen, UserCheck, Rocket, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 export const courses: Course[] = [
@@ -74,13 +75,14 @@ const timelineSteps: TimelineStep[] = [
   }
 ];
 
-export type AppView = 'home' | 'courses' | 'course-detail' | 'path' | 'syllabus' | 'experience' | 'blogs' | 'blog-detail' | 'login' | 'profile' | 'contact';
+export type AppView = 'home' | 'courses' | 'course-detail' | 'path' | 'syllabus' | 'experience' | 'blogs' | 'blog-detail' | 'login' | 'profile' | 'contact' | 'enrollment';
 
 function AppContent() {
   const { user, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
   const [activeBlogId, setActiveBlogId] = useState<string | null>(null);
+  const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
 
   useEffect(() => {
     if (user && currentView === 'login') {
@@ -90,6 +92,9 @@ function AppContent() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    if (enrollmentSuccess && currentView !== 'enrollment') {
+      setEnrollmentSuccess(false);
+    }
   }, [currentView, activeCourseId, activeBlogId]);
 
   if (isLoading) {
@@ -110,20 +115,10 @@ function AppContent() {
     setCurrentView('blog-detail');
   };
 
-  const PageHeader = ({ title, description }: { title: string; description: string }) => (
-    <div className="bg-slate-900 pt-32 pb-16 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-600 opacity-10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <nav className="flex items-center gap-2 text-indigo-300 text-sm mb-4">
-          <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">Home</button>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-white font-medium">{title}</span>
-        </nav>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{title}</h1>
-        <p className="text-slate-400 text-lg max-w-2xl">{description}</p>
-      </div>
-    </div>
-  );
+  const handleEnrollClick = (trackId?: string) => {
+    if (trackId) setActiveCourseId(trackId);
+    setCurrentView('enrollment');
+  };
 
   const renderView = () => {
     if (currentView === 'login') {
@@ -133,6 +128,31 @@ function AppContent() {
           onBack={() => setCurrentView('home')} 
         />
       );
+    }
+
+    if (currentView === 'enrollment') {
+      if (enrollmentSuccess) {
+        return (
+          <div className="min-h-screen flex items-center justify-center px-4 pt-20">
+             <div className="bg-white p-12 rounded-[3rem] shadow-2xl text-center max-w-md border border-slate-100 animate-in zoom-in duration-300">
+                <div className="size-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                  <CheckCircle2 size={48} />
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Sent!</h2>
+                <p className="text-slate-500 mb-10 leading-relaxed">We've received your enrollment request. Our counselor will contact you within 24 hours to finalize your registration.</p>
+                <div className="space-y-3">
+                  <button onClick={() => setCurrentView('home')} className="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100">Back to Home</button>
+                  <button onClick={() => { setEnrollmentSuccess(false); setCurrentView('enrollment'); }} className="w-full text-indigo-600 font-bold py-3 hover:underline">Apply for another track</button>
+                </div>
+             </div>
+          </div>
+        );
+      }
+      return <EnrollmentPage 
+        initialTrack={activeCourseId || undefined} 
+        onBack={() => setCurrentView('courses')} 
+        onSuccess={() => setEnrollmentSuccess(true)}
+      />;
     }
 
     switch (currentView) {
@@ -145,10 +165,7 @@ function AppContent() {
       case 'courses':
         return (
           <div className="animate-fade-in-down">
-            <PageHeader 
-              title="Career Tracks" 
-              description="Choose a specialized path designed to transform you into a world-class engineer." 
-            />
+            <PageHeader title="Career Tracks" description="Choose a specialized path designed to transform you into a world-class engineer." />
             <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {courses.map(course => (
@@ -160,14 +177,11 @@ function AppContent() {
         );
       case 'course-detail':
         const selectedCourse = courses.find(c => c.id === activeCourseId);
-        return selectedCourse ? <CourseDetail course={selectedCourse} onBack={() => setCurrentView('courses')} /> : <div className="pt-40 text-center">Course not found.</div>;
+        return selectedCourse ? <CourseDetail course={selectedCourse} onBack={() => setCurrentView('courses')} onEnroll={handleEnrollClick} /> : <div className="pt-40 text-center">Course not found.</div>;
       case 'blogs':
         return (
           <div className="animate-fade-in-down">
-            <PageHeader 
-              title="Latest Insights" 
-              description="Stay updated with the latest trends in Cloud, DevOps, and Data Science." 
-            />
+            <PageHeader title="Latest Insights" description="Stay updated with the latest trends in Cloud, DevOps, and Data Science." />
             <BlogsPage onReadMore={navigateToBlog} />
           </div>
         );
@@ -176,30 +190,21 @@ function AppContent() {
       case 'contact':
         return (
           <div className="animate-fade-in-down">
-            <PageHeader 
-              title="Get in Touch" 
-              description="Have questions about our programs or career assistance? Our team is here to support you." 
-            />
+            <PageHeader title="Get in Touch" description="Have questions about our programs or career assistance? Our team is here to support you." />
             <ContactPage />
           </div>
         );
       case 'path':
         return (
           <div className="animate-fade-in-down">
-            <PageHeader 
-              title="Learning Path" 
-              description="Our 6-month curriculum is structured to build your confidence from the ground up." 
-            />
+            <PageHeader title="Learning Path" description="Our 6-month curriculum is structured to build your confidence from the ground up." />
             <Timeline steps={timelineSteps} />
           </div>
         );
       case 'syllabus':
         return (
           <div className="animate-fade-in-down">
-            <PageHeader 
-              title="Detailed Syllabus" 
-              description="Explore the exact modules and topics you will master during the program." 
-            />
+            <PageHeader title="Detailed Syllabus" description="Explore the exact modules and topics you will master during the program." />
             <div className="py-12">
               <Syllabus />
             </div>
@@ -208,10 +213,7 @@ function AppContent() {
       case 'experience':
         return (
           <div className="animate-fade-in-down">
-            <PageHeader 
-              title="Hands-on Experience" 
-              description="Apply your knowledge to real corporate scenarios and build a portfolio that stands out." 
-            />
+            <PageHeader title="Hands-on Experience" description="Apply your knowledge to real corporate scenarios and build a portfolio that stands out." />
             <ExperienceSection />
           </div>
         );
@@ -251,10 +253,10 @@ function AppContent() {
                    Join 5,000+ students who have successfully transitioned into high-paying tech careers.
                  </p>
                  <button 
-                  onClick={() => user ? setCurrentView('profile') : setCurrentView('login')}
+                  onClick={handleEnrollClick}
                   className="bg-white text-indigo-600 font-bold py-4 px-10 rounded-xl shadow-xl hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
                 >
-                   {user ? 'Go to Dashboard' : 'Apply Now for Free'}
+                   {user ? 'Go to Enrollment' : 'Apply Now for Free'}
                  </button>
                </div>
             </section>
@@ -263,16 +265,33 @@ function AppContent() {
     }
   };
 
+  const PageHeader = ({ title, description }: { title: string; description: string }) => (
+    <div className="bg-slate-900 pt-32 pb-16 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-600 opacity-10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <nav className="flex items-center gap-2 text-indigo-300 text-sm mb-4">
+          <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">Home</button>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-white font-medium">{title}</span>
+        </nav>
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{title}</h1>
+        <p className="text-slate-400 text-lg max-w-2xl">{description}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <Navbar 
-        onNavigate={setCurrentView}
-        activeView={currentView}
-        onLoginClick={() => setCurrentView('login')} 
-        onProfileClick={() => setCurrentView('profile')}
-      />
+      {currentView !== 'login' && (
+        <Navbar 
+          onNavigate={setCurrentView}
+          activeView={currentView}
+          onLoginClick={() => setCurrentView('login')} 
+          onProfileClick={() => setCurrentView('profile')}
+        />
+      )}
       <main>{renderView()}</main>
-      {currentView !== 'profile' && <Footer onNavigate={setCurrentView} />}
+      {currentView !== 'profile' && currentView !== 'login' && <Footer onNavigate={setCurrentView} />}
     </div>
   );
 }

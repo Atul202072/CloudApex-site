@@ -55,6 +55,15 @@ export interface ContactInquiry {
   date: string;
 }
 
+export interface EnrollmentData {
+  fullName: string;
+  email: string;
+  phone: string;
+  track: string;
+  experience: string;
+  motivation: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: User;
