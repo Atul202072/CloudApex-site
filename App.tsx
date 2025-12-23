@@ -116,7 +116,7 @@ function AppContent() {
   };
 
   const handleEnrollClick = (trackId?: string) => {
-    if (trackId) setActiveCourseId(trackId);
+    if (trackId && typeof trackId === 'string') setActiveCourseId(trackId);
     setCurrentView('enrollment');
   };
 
@@ -253,7 +253,8 @@ function AppContent() {
                    Join 5,000+ students who have successfully transitioned into high-paying tech careers.
                  </p>
                  <button 
-                  onClick={handleEnrollClick}
+                  // Wrapping in arrow function to avoid passing MouseEvent as trackId
+                  onClick={() => handleEnrollClick()}
                   className="bg-white text-indigo-600 font-bold py-4 px-10 rounded-xl shadow-xl hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
                 >
                    {user ? 'Go to Enrollment' : 'Apply Now for Free'}

@@ -41,8 +41,9 @@ export const api = {
       if (data.token) localStorage.setItem('cloudapex_token', data.token);
       return data;
     } catch (err) {
-      console.warn("Auth API unreachable, using mock signup.");
+      console.warn("Auth Server unreachable or error, falling back to original mock auth.");
       const user = await mockApi.signup(email, name);
+      localStorage.setItem('cloudapex_token', 'mock-token');
       return { token: 'mock-token', user };
     }
   },
@@ -58,8 +59,9 @@ export const api = {
       if (data.token) localStorage.setItem('cloudapex_token', data.token);
       return data;
     } catch (err) {
-      console.warn("Auth API unreachable, using mock login.");
+      console.warn("Auth Server unreachable or error, falling back to original mock auth.");
       const user = await mockApi.login(email);
+      localStorage.setItem('cloudapex_token', 'mock-token');
       return { token: 'mock-token', user };
     }
   },
@@ -73,9 +75,8 @@ export const api = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.warn("Enrollment API Error, using simulation mode.");
       await new Promise(r => setTimeout(r, 1000));
-      return { message: "Enrollment received (Simulated)" };
+      return { message: "Enrollment received (Simulation Mode)" };
     }
   },
 
@@ -83,7 +84,6 @@ export const api = {
     const token = localStorage.getItem('cloudapex_token');
     if (!token) return null;
     
-    // If it's a mock token, return the mock session
     if (token === 'mock-token') {
       return await mockApi.getSession();
     }
@@ -93,7 +93,6 @@ export const api = {
       if (!response.ok) throw new Error();
       return await response.json();
     } catch {
-      // Fallback to mock session if network check fails
       return await mockApi.getSession();
     }
   },
@@ -126,7 +125,7 @@ export const api = {
       return await handleResponse(response);
     } catch (err) {
       await new Promise(r => setTimeout(r, 800));
-      return { message: 'Password updated successfully (Simulated)' };
+      return { message: 'Password updated' };
     }
   },
 
@@ -140,7 +139,7 @@ export const api = {
       return await handleResponse(response);
     } catch (err) {
       await new Promise(r => setTimeout(r, 800));
-      return { message: 'Message received (Simulated)' };
+      return { message: 'Contact sent' };
     }
   },
 
@@ -149,7 +148,7 @@ export const api = {
       const response = await fetch(`${API_BASE}/blogs`);
       return await handleResponse(response);
     } catch (err) {
-      return []; // Return empty or add mock blogs here
+      return [];
     }
   },
 

@@ -14,7 +14,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBack }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +60,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBack }) => {
       if (isSignUp) {
           if (!name.trim()) throw new Error("Full name is required.");
           if (password.length < 6) throw new Error("Password must be at least 6 characters.");
-          if (password !== confirmPassword) throw new Error("Passwords do not match.");
+          // Removed confirmPassword check as the field is not present in the current UI design
           await signup(email, name, password);
       } else {
           if (!email.trim() || !password.trim()) throw new Error("Please enter both email and password.");
@@ -70,7 +69,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBack }) => {
       onLoginSuccess();
     } catch (err: any) {
       console.error("Auth Error:", err);
-      setError(err.message || "Failed to authenticate. Please check your credentials.");
+      setError(err.message || "Authentication failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
