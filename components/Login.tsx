@@ -60,7 +60,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBack }) => {
       if (isSignUp) {
           if (!name.trim()) throw new Error("Full name is required.");
           if (password.length < 6) throw new Error("Password must be at least 6 characters.");
-          // Removed confirmPassword check as the field is not present in the current UI design
           await signup(email, name, password);
       } else {
           if (!email.trim() || !password.trim()) throw new Error("Please enter both email and password.");
@@ -100,7 +99,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBack }) => {
                <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                  <CloudLightning className="w-8 h-8 text-white" />
                </div>
-               <span className="text-2xl font-bold tracking-tight font-display">CloudApex</span>
+               <span className="text-2xl font-bold tracking-tight font-display">ApexTech Labs</span>
             </div>
           </div>
           
@@ -139,7 +138,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onBack }) => {
           </div>
 
           <div className="text-sm text-indigo-200/40 flex justify-between items-center pt-8">
-             <span>© 2024 CloudApex Inc.</span>
+             <span>© 2024 ApexTech Labs Inc.</span>
              <div className="flex gap-10">
                <span className="hover:text-white cursor-pointer transition-all hover:underline underline-offset-4">Privacy</span>
                <span className="hover:text-white cursor-pointer transition-all hover:underline underline-offset-4">Terms</span>

@@ -46,7 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onProfileClick, on
             <div className="bg-indigo-600 p-2 rounded-lg">
               <CloudLightning className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">CloudApex</span>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">ApexTech Labs</span>
           </div>
 
           <div className="hidden md:flex items-center gap-8">

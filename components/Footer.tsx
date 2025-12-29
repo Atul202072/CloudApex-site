@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <div className="bg-indigo-600 p-1.5 rounded-lg">
                 <CloudLightning className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-900">CloudApex</span>
+              <span className="text-xl font-bold text-slate-900">ApexTech Labs</span>
             </div>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
               Empowering the next generation of cloud engineers and data analysts with industry-ready skills.
@@ -54,7 +54,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <ul className="space-y-4 text-sm text-slate-600">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-slate-400" />
-                hello@cloudapex.com
+                hello@apextechlabs.com
               </li>
               <li>
                 123 Innovation Drive,<br/>
@@ -65,7 +65,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-sm">© 2024 CloudApex Learning. All rights reserved.</p>
+          <p className="text-slate-500 text-sm">© 2024 ApexTech Labs. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-slate-500">
             <a href="#" className="hover:text-indigo-600">Privacy Policy</a>
             <a href="#" className="hover:text-indigo-600">Terms of Service</a>
